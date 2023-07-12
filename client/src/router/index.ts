@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from "vue-router";
-import Signin from "../components/Signin.vue";
-import Signup from "../components/Signup.vue";
+import Signin from "../components/auth/Signin.vue";
+import Signup from "../components/auth/Signup.vue";
 import AddTransaction from "../components/AddTransaction.vue";
 import ViewTransaction from "../components/ViewTransaction.vue";
 import ViewData from "../components/ViewData.vue";
@@ -9,7 +9,11 @@ import Notfound from "../components/Notfound.vue";
 
 function guardMyroute(to: any, from: any, next: any) {
   let isAuthenticated = false;
-  if (localStorage.getItem("loginUser") != null) isAuthenticated = true;
+  if (
+    localStorage.getItem("loginUser") != null &&
+    localStorage.getItem("token") != null
+  )
+    isAuthenticated = true;
   else isAuthenticated = false;
   if (isAuthenticated) {
     next(); // allow to enter route
@@ -20,7 +24,11 @@ function guardMyroute(to: any, from: any, next: any) {
 
 function guardMySign(to: any, from: any, next: any) {
   let isAuthenticated = false;
-  if (localStorage.getItem("loginUser") != null) isAuthenticated = true;
+  if (
+    localStorage.getItem("loginUser") != null &&
+    localStorage.getItem("token") != null
+  )
+    isAuthenticated = true;
   else isAuthenticated = false;
   if (isAuthenticated) {
     next("/"); // allow to enter route
@@ -59,6 +67,7 @@ const router = createRouter({
       name: "Edit",
       beforeEnter: guardMyroute,
     },
+    { path: "/:pathMatch(.*)*", component: Notfound },
   ],
 });
 

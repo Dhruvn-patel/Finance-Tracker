@@ -8,7 +8,7 @@
           v-model="transaction.selectDate"
           label="Transaction Date"
           type="date"
-          :rules="rules.date"
+          :rules="tranasactionRules.date"
         ></v-text-field>
 
         <v-select
@@ -16,7 +16,7 @@
           density="comfortable"
           class="me-10"
           v-model="transaction.selectMonth"
-          :rules="rules.select"
+          :rules="tranasactionRules.select"
           :items="monthyear"
         ></v-select>
         <v-select
@@ -24,7 +24,7 @@
           density="comfortable"
           class="me-10"
           v-model="transaction.selectTransactionType"
-          :rules="rules.select"
+          :rules="tranasactionRules.select"
           :items="types"
         ></v-select>
         <v-select
@@ -33,7 +33,7 @@
           class="me-10"
           v-model="transaction.selectFrom"
           :rules="accountTypeRule.accountSame"
-          :customRules="rules.select"
+          :customRules="tranasactionRules.select"
           :items="account"
         ></v-select>
         <v-select
@@ -42,25 +42,25 @@
           class="me-10"
           v-model="transaction.selectTo"
           :rules="accountTypeRule.accountSame"
-          :customRules="rules.select"
+          :customRules="tranasactionRules.select"
           :items="account"
         ></v-select>
         <v-text-field
           v-model.trim="transaction.Amount"
           class="me-10"
           label="Amount"
-          :rules="rules.amount"
+          :rules="tranasactionRules.amount"
         ></v-text-field>
 
         <v-file-input
-          v-if="flag == false"
+          v-if="flag"
           clearable
           label="Image upload"
           class="me-10"
           accept=".png, .jpg, .jpeg"
-          ref="file"
+          ref="uploadFile"
           type="file"
-          :rules="rules.files"
+          :rules="tranasactionRules.files"
         ></v-file-input>
         <v-card class="mx-auto" max-width="300" v-else>
           <v-card-text class="d-flex justify-space-between">
@@ -82,7 +82,7 @@
           label="Notes"
           class="me-10"
           v-model.trim="transaction.notes"
-          :rules="rules.notes"
+          :rules="tranasactionRules.notes"
         ></v-textarea>
         <v-divider></v-divider>
         <v-spacer></v-spacer>
@@ -95,114 +95,120 @@
 </template>
 
 <script>
-import { TranasactionDataUpdate } from "../service/transaction.service";
+import { computed, onMounted, ref } from "vue";
+import Swal from "sweetalert2";
 import { transactionValidate } from "../helper/transaction/transaction.rules";
+import {
+  singleData,
+  TranasactionDataUpdate,
+} from "../service/transaction.service";
+import { useRoute, useRouter } from "vue-router";
 export default {
   name: "TheEdit",
-  data() {
-    return {
-      flag: true,
-      transaction: {
-        selectDate: "",
-        selectMonth: "",
-        selectTransactionType: "",
-        Amount: "",
-        selectFrom: "",
-        selectTo: "",
-        notes: "",
-        imgurl: null,
-      },
-      rules: transactionValidate,
-      monthyear: [
-        "Jan 2023",
-        "Feb 2023",
-        "Mar 2023",
-        "Apr 2023",
-        "May 2023",
-        "Jun 2023",
-        "Jul 2023",
-        "Aug 2023",
-        "Sep 2023",
-        "Oct 2023",
-        "Nov 2023",
-        "Dec 2023",
-      ],
-      account: [
-        "Personal Account ",
-        "From Account",
-        "Real Living",
-        "Full Circle",
-        "Core Realtors",
-        "Big Block",
-      ],
-      types: ["Home Expense ", "Personal Expense", "Income"],
-    };
-  },
-  computed: {
-    accountTypeRule() {
-      const valid = this.transaction.selectFrom === this.transaction.selectTo;
+
+  setup() {
+    const router = useRouter();
+    const route = useRoute();
+    /* rules computed */
+
+    const tranasactionRules = computed(() => {
+      return transactionValidate;
+    });
+    const accountTypeRule = computed(() => {
+      const valid = transaction.value.selectFrom === transaction.value.selectTo;
       return {
         accountSame: [() => !valid || "Account can not be same"],
       };
-    },
-  },
-  methods: {
-    colseImg() {
-      return (this.flag = !this.flag);
-    },
-    async submit() {
-      const validate = await this.$refs.form.validate();
+    });
 
+    /* state  */
+    const form = ref("");
+    const uploadFile = ref("");
+    const flag = ref(false);
+    const transaction = ref({
+      selectDate: "",
+      selectMonth: "",
+      selectTransactionType: "",
+      Amount: "",
+      selectFrom: "",
+      selectTo: "",
+      notes: "",
+      imgurl: null,
+    });
+    const monthyear = [
+      "Jan 2023",
+      "Feb 2023",
+      "Mar 2023",
+      "Apr 2023",
+      "May 2023",
+      "Jun 2023",
+      "Jul 2023",
+      "Aug 2023",
+      "Sep 2023",
+      "Oct 2023",
+      "Nov 2023",
+      "Dec 2023",
+    ];
+
+    const account = [
+      "Personal Account ",
+      "From Account",
+      "Real Living",
+      "Full Circle",
+      "Core Realtors",
+      "Big Block",
+    ];
+    const types = ["Home Expense ", "Personal Expense", "Income"];
+
+    /* methods */
+    function colseImg() {
+      flag.value = !flag.value;
+      console.log("bdfj", flag.value);
+    }
+
+    async function submit() {
+      const validate = await form.value.validate();
       const userId = JSON.parse(localStorage.getItem("loginUser")).userId;
       if (validate.valid) {
         let file;
-
-        if (this.flag == false) {
-          file = this.$refs.file.files.item(0);
+        let data;
+        if (flag.value !== false) {
+          file = uploadFile.value.files.item(0);
           let reader = new FileReader();
           reader.readAsDataURL(file);
           reader.onloadend = async (base64) => {
             const base64String = reader.result;
             const img = base64.currentTarget.result;
-            const data = {
+            data = {
               receipt: img,
               userId: userId,
-              trdate: this.transaction.selectDate,
-              monthyear: this.transaction.selectMonth,
-              type: this.transaction.selectTransactionType,
-              fromaccount: this.transaction.selectFrom,
-              toaccount: this.transaction.selectTo,
-              amount: this.transaction.Amount,
-              notes: this.transaction.notes,
+              trdate: transaction.value.selectDate,
+              monthyear: transaction.value.selectMonth,
+              type: transaction.value.selectTransactionType,
+              fromaccount: transaction.value.selectFrom,
+              toaccount: transaction.value.selectTo,
+              amount: transaction.value.Amount,
+              notes: transaction.value.notes,
             };
-
-            const ItemId = this.$route.params.id;
-            const responseData = await TranasactionDataUpdate(data, ItemId);
-            this.$swal({
-              position: "top-center",
-              icon: "success",
-              title: "Data Updated !",
-              customClass: "swal-wide",
-              showConfirmButton: false,
-              timer: 1000,
-            });
-            return this.$router.push("/");
           };
         } else {
-          const data = {
-            receipt: this.transaction.imgurl,
+          data = {
+            receipt: transaction.value.imgurl,
             userId: userId,
-            trdate: this.transaction.selectDate,
-            monthyear: this.transaction.selectMonth,
-            type: this.transaction.selectTransactionType,
-            fromaccount: this.transaction.selectFrom,
-            toaccount: this.transaction.selectTo,
-            amount: this.transaction.Amount,
-            notes: this.transaction.notes,
+            trdate: transaction.value.selectDate,
+            monthyear: transaction.value.selectMonth,
+            type: transaction.value.selectTransactionType,
+            fromaccount: transaction.value.selectFrom,
+            toaccount: transaction.value.selectTo,
+            amount: transaction.value.Amount,
+            notes: transaction.value.notes,
           };
-          const ItemId = this.$route.params.id;
+        }
+
+        const ItemId = route.params.id;
+        try {
           const responseData = await TranasactionDataUpdate(data, ItemId);
-          this.$swal({
+          Swal.fire({
             position: "top-center",
             icon: "success",
             title: "Data Updated !",
@@ -210,27 +216,53 @@ export default {
             showConfirmButton: false,
             timer: 1000,
           });
-          return this.$router.push("/");
+          return router.push("/");
+        } catch (error) {
+          return error;
         }
       }
-    },
-  },
-  mounted() {
-    const itemId = this.$route.params.id;
-    const data = JSON.parse(localStorage.getItem("transactionData"));
-    for (let i = 0; i < data.length; i++) {
-      if (data[i].id == itemId) {
-        this.transaction.selectDate = data[i].trdate.split("T")[0];
-        this.transaction.selectMonth = data[i].monthyear;
-        this.transaction.selectTransactionType = data[i].type;
-        this.transaction.Amount = data[i].amount;
-        this.transaction.selectFrom = data[i].fromaccount;
-        this.transaction.selectTo = data[i].toaccount;
-        this.transaction.notes = data[i].notes;
-        this.transaction.imgurl = data[i].receipt;
-        break;
-      }
     }
+
+    onMounted(async () => {
+      const userId = JSON.parse(localStorage.getItem("loginUser")).userId;
+      const itemId = route.params.id;
+      const data = {
+        params: {
+          userId: userId,
+          id: itemId,
+        },
+      };
+      try {
+        const resultdata = await singleData(data);
+        console.log("resultdata", resultdata);
+        const singleEditData = resultdata.data;
+        transaction.value.selectDate = singleEditData.trdate.split("T")[0];
+        transaction.value.selectMonth = singleEditData.monthyear;
+        transaction.value.selectTransactionType = singleEditData.type;
+        transaction.value.Amount = singleEditData.amount;
+        transaction.value.selectFrom = singleEditData.fromaccount;
+        transaction.value.selectTo = singleEditData.toaccount;
+        transaction.value.notes = singleEditData.notes;
+        transaction.value.imgurl = singleEditData.receipt;
+        
+      } catch (error) {
+        return error;
+      }
+    });
+
+    return {
+      colseImg,
+      transaction,
+      accountTypeRule,
+      tranasactionRules,
+      monthyear,
+      account,
+      types,
+      form,
+      submit,
+      uploadFile,
+      flag,
+    };
   },
 };
 </script>

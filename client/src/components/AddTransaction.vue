@@ -8,15 +8,14 @@
           v-model="transaction.selectDate"
           label="Transaction Date"
           type="date"
-          :rules="rules.date"
+          :rules="tranasactionRules.date"
         ></v-text-field>
-
         <v-select
           label="Select Month Year"
           density="comfortable"
           class="me-10"
           v-model="transaction.selectMonth"
-          :rules="rules.select"
+          :rules="tranasactionRules.select"
           :items="monthyear"
         ></v-select>
         <v-select
@@ -24,7 +23,7 @@
           density="comfortable"
           class="me-10"
           v-model="transaction.selectTransactionType"
-          :rules="rules.select"
+          :rules="tranasactionRules.select"
           :items="types"
         ></v-select>
         <v-select
@@ -33,7 +32,7 @@
           class="me-10"
           v-model="transaction.selectFrom"
           :rules="accountTypeRule.accountSame"
-          :customRules="rules.select"
+          :customRules="tranasactionRules.select"
           :items="account"
         ></v-select>
         <v-select
@@ -42,14 +41,15 @@
           class="me-10"
           v-model="transaction.selectTo"
           :rules="accountTypeRule.accountSame"
-          :customRules="rules.select"
+          :customRules="tranasactionRules.select"
           :items="account"
         ></v-select>
         <v-text-field
           v-model.trim="transaction.Amount"
           class="me-10"
           label="Amount"
-          :rules="rules.amount"
+          type="number"
+          :rules="tranasactionRules.amount"
         ></v-text-field>
 
         <v-file-input
@@ -57,16 +57,16 @@
           label="Image upload"
           class="me-10"
           accept=".png, .jpg, .jpeg"
-          ref="file"
+          ref="uploadFile"
           type="file"
-          :rules="rules.files"
+          :rules="tranasactionRules.files"
         ></v-file-input>
 
         <v-textarea
           label="Notes"
           class="me-10"
           v-model.trim="transaction.notes"
-          :rules="rules.notes"
+          :rules="tranasactionRules.notes"
           ref="notes"
         ></v-textarea>
         <v-divider></v-divider>
@@ -80,62 +80,65 @@
 </template>
 
 <script>
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import { AddTranasaction } from "../service/transaction.service";
 import { transactionValidate } from "../helper/transaction/transaction.rules";
+import { useRouter } from "vue-router";
 export default {
   name: "AddTransaction",
-  data() {
-    return {
-      transaction: {
-        selectDate: "",
-        selectMonth: "",
-        selectTransactionType: "",
-        Amount: "",
-        selectFrom: "",
-        selectTo: "",
-        notes: "",
-      },
-      rules: transactionValidate,
-      monthyear: [
-        "Jan 2023",
-        "Feb 2023",
-        "Mar 2023",
-        "Apr 2023",
-        "May 2023",
-        "Jun 2023",
-        "Jul 2023",
-        "Aug 2023",
-        "Sep 2023",
-        "Oct 2023",
-        "Nov 2023",
-        "Dec 2023",
-      ],
-      account: [
-        "Personal Account ",
-        "From Account",
-        "Real Living",
-        "Full Circle",
-        "Core Realtors",
-        "Big Block",
-      ],
-      types: ["Home Expense ", "Personal Expense", "Income"],
-    };
-  },
-  computed: {
-    accountTypeRule() {
-      const valid = this.transaction.selectFrom === this.transaction.selectTo;
+  setup() {
+    const form = ref("");
+    const uploadFile = ref("");
+    const router = useRouter();
+    /* rules computed */
+    const tranasactionRules = computed(() => {
+      return transactionValidate;
+    });
+    const transaction = ref({
+      selectDate: "asdadadsa",
+      selectMonth: "",
+      selectTransactionType: "",
+      Amount: "",
+      selectFrom: "",
+      selectTo: "",
+      notes: "",
+    });
+    const monthyear = [
+      "Jan 2023",
+      "Feb 2023",
+      "Mar 2023",
+      "Apr 2023",
+      "May 2023",
+      "Jun 2023",
+      "Jul 2023",
+      "Aug 2023",
+      "Sep 2023",
+      "Oct 2023",
+      "Nov 2023",
+      "Dec 2023",
+    ];
+
+    const account = [
+      "Personal Account ",
+      "From Account",
+      "Real Living",
+      "Full Circle",
+      "Core Realtors",
+      "Big Block",
+    ];
+    const types = ["Home Expense ", "Personal Expense", "Income"];
+
+    const accountTypeRule = computed(() => {
+      const valid = transaction.value.selectFrom === transaction.value.selectTo;
       return {
         accountSame: [() => !valid || "Account can not be same"],
       };
-    },
-  },
-  methods: {
-    async submit() {
-      const validate = await this.$refs.form.validate();
-    
+    });
+
+    async function submit() {
+      const validate = await form.value.validate();
       if (validate.valid) {
-        let file = this.$refs.file.files.item(0);
+        let file = uploadFile.value.files.item(0);
         let reader = new FileReader();
         const userId = JSON.parse(localStorage.getItem("loginUser")).userId;
         reader.readAsDataURL(file);
@@ -147,20 +150,32 @@ export default {
           const data = {
             receipt: img,
             userId: userId,
-            trdate: this.transaction.selectDate,
-            monthyear: this.transaction.selectMonth,
-            type: this.transaction.selectTransactionType,
-            fromaccount: this.transaction.selectFrom,
-            toaccount: this.transaction.selectTo,
-            amount: this.transaction.Amount,
-            notes: this.transaction.notes,
+            trdate: transaction.value.selectDate,
+            monthyear: transaction.value.selectMonth,
+            type: transaction.value.selectTransactionType,
+            fromaccount: transaction.value.selectFrom,
+            toaccount: transaction.value.selectTo,
+            amount: transaction.value.Amount,
+            notes: transaction.value.notes,
           };
 
           const responseData = await AddTranasaction(data);
-          this.$router.push("/");
+          return router.push("/");
         };
       }
-    },
+    }
+
+    return {
+      transaction,
+      accountTypeRule,
+      tranasactionRules,
+      monthyear,
+      account,
+      types,
+      form,
+      submit,
+      uploadFile,
+    };
   },
 };
 </script>

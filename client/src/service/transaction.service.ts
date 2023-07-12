@@ -2,6 +2,7 @@ import {
   axioDataById,
   axioDeleteById,
   axiosAddTranasaction,
+  axiosingleData,
   axioupdateTransaction,
 } from "../plugins/axios.plugin";
 
@@ -19,10 +20,14 @@ const TranasactionDataDelete = (id: number) => {
 const TranasactionDataUpdate = (data: object, id: number) => {
   return axioupdateTransaction("updateTransaction/" + id, data);
 };
+const singleData = (data: object) => {
+  return axiosingleData("dataSingle", data);
+};
 
 export {
   AddTranasaction,
   TranasactionByuserId,
   TranasactionDataDelete,
   TranasactionDataUpdate,
+  singleData,
 };

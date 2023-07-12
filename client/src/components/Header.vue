@@ -28,7 +28,6 @@
         <v-btn flat to="/transactions/create">Add Transaction </v-btn>
         <v-btn flat to="/">View Transaction </v-btn>
         <v-btn v-if="isLogin == false" flat to="/register">Sign Up </v-btn>
-
         <v-btn flat @click="SignOutFunction" v-if="isLogin == true"
           >Sign Out
         </v-btn>
@@ -43,44 +42,45 @@
 </template>
 
 <script>
-import { mapActions, mapGetters } from "vuex";
+import { computed, ref } from "vue";
+import { useTheme } from "vuetify";
+import { useStore } from "vuex";
+import { useRoute, useRouter } from "vue-router";
 export default {
   name: "TheHeaders",
-  data() {
+  setup() {
+    const store = useStore();
+    const router = useRouter();
+    const appTitle = ref("Finance Tracker");
+    const sidebar = ref(false);
+
+    /* methods */
+    const SignOutFunction = function () {
+      store.dispatch("LogOutFunction");
+      return router.push("/login");
+    };
+
+    const theme = useTheme();
+    const darkMode = ref(false);
+    const toggleTheme = () => {
+      theme.global.name.value = darkMode.value ? "dark" : "light";
+    };
+    /* hooks */
+
+    /* store */
+    const isLogin = computed(() => {
+      return store.getters.isLogin;
+    });
+
     return {
-      appTitle: "Finance Tracker",
-      sidebar: false,
-      menuItems: [
-        { title: "Add Transaction", path: "/addTransaction" },
-        { title: "View Transaction", path: "/" },
-        { title: "Sign Up", path: "/register" },
-        { title: "Sign In", path: "/login" },
-      ],
+      SignOutFunction,
+      isLogin,
+      toggleTheme,
+      appTitle,
+      darkMode,
+      sidebar,
     };
   },
-  methods: {
-    ...mapActions({
-      LogOutFunction: "LogOutFunction",
-      SignOutFunction() {
-        this.$router.push("/login");
-        this.LogOutFunction();
-      },
-    }),
-  },
-  computed: {
-    ...mapGetters({
-      isLogin: "isLogin",
-    }),
-  },
-};
-</script>
-<script setup>
-import { ref } from "vue";
-import { useTheme } from "vuetify";
-const theme = useTheme();
-const darkMode = ref(false);
-const toggleTheme = () => {
-  theme.global.name.value = darkMode.value ? "dark" : "light";
 };
 </script>
 

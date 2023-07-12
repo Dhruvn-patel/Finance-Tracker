@@ -18,9 +18,6 @@ export const transactionValidate = {
   ],
   notes: [
     (value: string) => {
-     
-
-
       return true;
     },
   ],

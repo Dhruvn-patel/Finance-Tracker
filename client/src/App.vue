@@ -7,6 +7,7 @@
 <script lang="ts">
 import { defineComponent } from "vue";
 import Header from "./components/Header.vue";
+localStorage.setItem("isDark", JSON.stringify(false));
 export default defineComponent({
   name: "App",
   components: {

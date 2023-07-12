@@ -8,6 +8,7 @@
       single-line
       hide-details
     ></v-text-field>
+
     <div v-if="historyList.length > 0">
       <v-table fixed-header>
         <thead>
@@ -89,7 +90,15 @@
             <td>{{ item.type }}</td>
             <td>{{ item.fromaccount }}</td>
             <td>{{ item.toaccount }}</td>
-            <td>{{ item.amount }}</td>
+            <td>
+              {{
+                item.amount.toLocaleString("en-IN", {
+                  maximumFractionDigits: 2,
+                  style: "currency",
+                  currency: "INR",
+                })
+              }}
+            </td>
             <td><img :src="item.receipt" alt="" /></td>
             <td>{{ item.notes }}</td>
             <td>
@@ -133,33 +142,51 @@
 </template>
 
 <script>
+import { computed, onMounted, ref, toRefs } from "vue";
+import { useRouter } from "vue-router";
 export default {
   name: "GroupCommon",
   props: ["selectedArr"],
-  data() {
-    return {
-      arr: [],
-      page: 1,
-      pageSize: 2,
-      listCount: 0,
-      historyList: [],
-      selectItems: [],
-      searchTerm: "",
-      toggle: false,
-    };
-  },
-  mounted() {
-    this.arr = this.selectedArr;
-    this.pageItemCreated();
-  },
-  computed: {
-    pages() {
-      if (this.pageSize == null || this.listCount == 0) return 0;
-      return Math.ceil(this.listCount / this.pageSize);
-    },
-  },
-  methods: {
-    sortColumn(column) {
+
+  /* state */
+  setup(props) {
+    const { selectedArr } = toRefs(props);
+    console.log("props", selectedArr.value);
+    let arr = [];
+    const page = ref(1);
+    const pageSize = ref(2);
+    const listCount = ref(0);
+    const historyList = ref([]);
+    const selectItems = ref([]);
+    const searchTerm = ref("");
+    const toggle = ref(false);
+    const router = useRouter();
+    /* computed */
+
+    /* methods */
+    function pageItemCreated() {
+      selectItems.value = [];
+      for (let i = 2; i <= arr.length; i++) {
+        selectItems.value.push(i);
+      }
+      console.log("selectItems", selectItems.value);
+      initPage();
+      updatePage();
+    }
+    function initPage() {
+      listCount.value = arr.length;
+      if (listCount.value <= pageSize.value) {
+        historyList.value = arr;
+      } else {
+        historyList.value = arr.slice(0, pageSize.value);
+      }
+    }
+    function updatePage() {
+      let start = (page.value - 1) * pageSize.value;
+      let end = page.value * pageSize.value;
+      historyList.value = arr.slice(start, end);
+    }
+    function sortColumn(column) {
       const months = [
         "Jan 2023",
         "Feb 2023",
@@ -175,15 +202,13 @@ export default {
         "Dec 2023",
       ];
 
-      if (this.toggle == false) {
-  
-
+      if (toggle.value == false) {
         if (column === "monthyear") {
-          this.arr.sort((a, b) => {
+          arr.sort((a, b) => {
             return months.indexOf(a[column]) - months.indexOf(b[column]);
           });
         } else {
-          this.arr.sort((a, b) => {
+          arr.sort((a, b) => {
             let fa = a[column],
               fb = b[column];
             if (fa < fb) {
@@ -195,13 +220,12 @@ export default {
           });
         }
       } else {
-
         if (column === "monthyear") {
-          this.arr.sort((a, b) => {
+          arr.sort((a, b) => {
             return months.indexOf(b[column]) - months.indexOf(a[column]);
           });
         } else {
-          this.arr.sort((a, b) => {
+          arr.sort((a, b) => {
             let fa = a[column],
               fb = b[column];
             if (fa > fb) {
@@ -213,63 +237,69 @@ export default {
           });
         }
       }
-      this.toggle = !this.toggle;
-      this.pageItemCreated();
-    },
-    initPage() {
-      this.listCount = this.arr.length;
-      if (this.listCount <= this.pageSize) {
-        this.historyList = this.arr;
-      } else {
-        this.historyList = this.arr.slice(0, this.pageSize);
-      }
-    },
-    pageItemCreated() {
-      this.selectItems = [];
-      for (let i = 2; i <= this.arr.length; i++) {
-        this.selectItems.push(i);
-      }
-      this.initPage();
-      this.updatePage();
-    },
-    searchValue() {
-      this.arr = this.selectedArr.filter((data) => {
+      toggle.value = !toggle.value;
+      pageItemCreated();
+    }
+
+    /* HOOKS */
+    onMounted(() => {
+      arr = selectedArr.value;
+      pageItemCreated();
+    });
+    function searchValue() {
+      arr = selectedArr.value.filter((data) => {
         const { monthyear, type, fromaccount, toaccount, notes, amount } = data;
         if (
-          monthyear.includes(this.searchTerm) ||
-          type.includes(this.searchTerm) ||
-          fromaccount.includes(this.searchTerm) ||
-          toaccount.includes(this.searchTerm) ||
-          notes.includes(this.searchTerm) ||
-          amount == this.searchTerm ||
-          amount.toString().includes(this.searchTerm)
+          monthyear.includes(searchTerm.value) ||
+          type.includes(searchTerm.value) ||
+          fromaccount.includes(searchTerm.value) ||
+          toaccount.includes(searchTerm.value) ||
+          notes.includes(searchTerm.value) ||
+          amount == searchTerm.value ||
+          amount.toString().includes(searchTerm.value)
         ) {
-    
           return data;
         }
       });
-      this.pageItemCreated();
-   
-    },
-    ViewBtn(id) {
-      this.$router.push({ path: `/transactions/${id}` });
-    },
-    EditBtn(id) {
-      this.$router.push(`/transactions/edit/${id}`);
-    },
+      pageItemCreated();
+    }
 
-    updatePage() {
- 
-      let start = (this.page - 1) * this.pageSize;
-      let end = this.page * this.pageSize;
-      this.historyList = this.arr.slice(start, end);
-  
-    },
-    pageSizeFunction(item) {
-      this.pageSize = item;
-      this.initPage();
-      this.updatePage();
-    },
+    function pageSizeFunction(item) {
+      pageSize.value = item;
+      console.log("pageSize.value ", pageSize.value);
+      initPage();
+      updatePage();
+    }
+
+    const pages = computed(() => {
+      if (pageSize.value == null || listCount.value == 0) return 0;
+      return Math.ceil(listCount.value / pageSize.value);
+    });
+    function ViewBtn(id) {
+      router.push({ path: `/transactions/${id}` });
+    }
+
+    function EditBtn(id) {
+      router.push(`/transactions/edit/${id}`);
+    }
+
+    return {
+      ViewBtn,
+      EditBtn,
+      updatePage,
+      pages,
+      pageSizeFunction,
+      historyList,
+      pageItemCreated,
+      sortColumn,
+      page,
+      pageSize,
+      listCount,
+      selectItems,
+      searchTerm,
+      toggle,
+      searchValue,
+    };
   },
 };
 </script>

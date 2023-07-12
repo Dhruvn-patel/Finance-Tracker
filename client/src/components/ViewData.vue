@@ -31,7 +31,9 @@
           </tr>
           <tr>
             <td>Amount</td>
-            <td>{{ singleDataObj.amount }}</td>
+            <td>
+              {{ singleDataObj.amount }}
+            </td>
           </tr>
           <tr>
             <td>Receipt</td>
@@ -59,25 +61,51 @@
 </template>
 
 <script>
-import { TranasactionDataDelete } from "../service/transaction.service";
+import Swal from "sweetalert2";
+import { onMounted, ref } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import {
+  singleData,
+  TranasactionDataDelete,
+} from "../service/transaction.service";
 export default {
   name: "TheView",
-  data() {
-    return {
-      singleDataObj: {},
-    };
-  },
-  mounted() {
-    const id = this.$route.params.id;
-    const singleData = JSON.parse(
-      localStorage.getItem("transactionData")
-    ).filter((item) => item.id === Number(id));
-    this.singleDataObj = singleData[0];
-  },
-  methods: {
-    async deleteFunction(id) {
+  setup() {
+    const router = useRouter();
+    const route = useRoute();
+    const singleDataObj = ref({});
+    /* hooks */
+    onMounted(async () => {
+      const userId = JSON.parse(localStorage.getItem("loginUser")).userId;
+      const id = route.params.id;
+      const data = {
+        params: {
+          userId: userId,
+          id: id,
+        },
+      };
+      try {
+        const resultdata = await singleData(data, id);
+        singleDataObj.value = resultdata.data;
+        singleDataObj.value.trdate = singleDataObj.value.trdate.split("T")[0];
+        singleDataObj.value.amount = singleDataObj.value.amount.toLocaleString(
+          "en-IN",
+          {
+            maximumFractionDigits: 2,
+            style: "currency",
+            currency: "INR",
+          }
+        );
+        console.log("resultdata", singleDataObj.value);
+      } catch (error) {
+        return error;
+      }
+    });
+
+    /* methods */
+    async function deleteFunction(id) {
       await TranasactionDataDelete(id);
-      this.$swal({
+      Swal.fire({
         position: "top-center",
         icon: "success",
         title: "deleted record",
@@ -85,8 +113,13 @@ export default {
         showConfirmButton: false,
         timer: 800,
       });
-      return this.$router.push("/");
-    },
+      return router.push("/");
+    }
+
+    return {
+      singleDataObj,
+      deleteFunction,
+    };
   },
 };
 </script>

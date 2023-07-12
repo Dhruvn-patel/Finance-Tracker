@@ -46,29 +46,27 @@
 <script>
 import { TranasactionByuserId } from "../service/transaction.service";
 import GroupCommon from "../components/GroupCommon.vue";
+import { onMounted, ref } from "vue";
 export default {
   name: "viewTransaction",
   computed: {},
   components: {
     GroupCommon,
   },
-  data() {
-    return {
-      selectedArr: {},
-      selectItems: [
-        { title: "none", name: "none" },
-        { title: "Month Year", name: "monthyear" },
-        { title: "Transaction Type", name: "type" },
-        { title: "From Account", name: "fromaccount" },
-        { title: "To Account", name: "toaccount" },
-      ],
-      desserts: [],
-    };
-  },
-  methods: {
-    groupByFunction(columnName) {
+  setup() {
+    const selectedArr = ref({});
+    const selectItems = [
+      { title: "none", name: "none" },
+      { title: "Month Year", name: "monthyear" },
+      { title: "Transaction Type", name: "type" },
+      { title: "From Account", name: "fromaccount" },
+      { title: "To Account", name: "toaccount" },
+    ];
+    let desserts = ref([]);
 
-      const groupByCategory = this.desserts.reduce((group, product) => {
+    /* methods */
+    function groupByFunction(columnName) {
+      const groupByCategory = desserts.value.reduce((group, product) => {
         let key = product[columnName];
         if (columnName === "none") {
           key = "AllData";
@@ -77,19 +75,28 @@ export default {
         group[key].push(product);
         return group;
       }, {});
- 
-      this.selectedArr = groupByCategory;
+
+      selectedArr.value = groupByCategory;
       for (let idx in groupByCategory) {
         console.log(groupByCategory[idx]);
       }
-    },
-  },
-  async mounted() {
-    const userId = JSON.parse(localStorage.getItem("loginUser")).userId;
-    const result = await TranasactionByuserId(userId);
-    this.desserts = result.data.allData;
-    localStorage.setItem("transactionData", JSON.stringify(this.desserts));
-    this.selectedArr = { AllData: this.desserts };
+    }
+
+    /* hooks */
+    onMounted(async () => {
+      const userId = JSON.parse(localStorage.getItem("loginUser")).userId;
+      const result = await TranasactionByuserId(userId);
+      try {
+        console.log("result", result);
+        desserts.value = result.data.allData;
+        localStorage.setItem("transactionData", JSON.stringify(desserts.value));
+        selectedArr.value = { AllData: desserts.value };
+      } catch (error) {
+        return error.message;
+      }
+    });
+
+    return { selectedArr, desserts, groupByFunction, selectItems };
   },
 };
 </script>
