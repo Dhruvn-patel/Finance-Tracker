@@ -44,8 +44,8 @@
 </template>
 
 <script>
-import { TranasactionByuserId } from "../service/transaction.service";
-import GroupCommon from "../components/GroupCommon.vue";
+import { TranasactionByuserId } from "../../service/transaction.service";
+import GroupCommon from "../../components/group-common.vue";
 import { onMounted, ref } from "vue";
 export default {
   name: "viewTransaction",

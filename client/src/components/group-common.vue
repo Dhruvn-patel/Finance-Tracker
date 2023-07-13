@@ -14,7 +14,8 @@
         <thead>
           <tr>
             <th>
-              <v-icon icon="mdi-calendar-range"></v-icon>Transaction Date
+              <v-icon icon="mdi-calendar-range"></v-icon>
+              Transaction Date
               <v-icon
                 icon="mdi-sort "
                 class="ml-2"
@@ -186,6 +187,7 @@ export default {
       let end = page.value * pageSize.value;
       historyList.value = arr.slice(start, end);
     }
+
     function sortColumn(column) {
       const months = [
         "Jan 2023",

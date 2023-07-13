@@ -1,11 +1,11 @@
 <template>
-  <v-app>
+  <div>
     <v-toolbar app>
       <span class="d-flex d-sm-none">
         <v-toolbar-side-icon @click="sidebar = !sidebar"> </v-toolbar-side-icon>
       </span>
       <v-toolbar-title>
-        <router-link to="/" class="ma-5 pa-5">
+        <router-link :to="{name:'root'}" class="ma-5 pa-5">
           <h1>
             {{ appTitle }}
           </h1>
@@ -35,10 +35,8 @@
       </v-toolbar-items>
     </v-toolbar>
 
-    <v-content>
-      <router-view></router-view>
-    </v-content>
-  </v-app>
+    <v-content> </v-content>
+  </div>
 </template>
 
 <script>

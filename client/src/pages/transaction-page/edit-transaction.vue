@@ -97,11 +97,11 @@
 <script>
 import { computed, onMounted, ref } from "vue";
 import Swal from "sweetalert2";
-import { transactionValidate } from "../helper/transaction/transaction.rules";
+import { transactionValidate } from "../../helper/transaction/transaction.rules";
 import {
   singleData,
   TranasactionDataUpdate,
-} from "../service/transaction.service";
+} from "../../service/transaction.service";
 import { useRoute, useRouter } from "vue-router";
 export default {
   name: "TheEdit",

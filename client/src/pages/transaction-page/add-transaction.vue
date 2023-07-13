@@ -81,8 +81,8 @@
 
 <script>
 import { computed, ref } from "vue";
-import { AddTranasaction } from "../service/transaction.service";
-import { transactionValidate } from "../helper/transaction/transaction.rules";
+import { AddTranasaction } from "../../service/transaction.service";
+import { transactionValidate } from "../../helper/transaction/transaction.rules";
 import { useRouter } from "vue-router";
 export default {
   name: "AddTransaction",

@@ -1,11 +1,11 @@
 import { createRouter, createWebHistory } from "vue-router";
-import Signin from "../components/auth/Signin.vue";
-import Signup from "../components/auth/Signup.vue";
-import AddTransaction from "../components/AddTransaction.vue";
-import ViewTransaction from "../components/ViewTransaction.vue";
-import ViewData from "../components/ViewData.vue";
-import EditData from "../components/EditData.vue";
-import Notfound from "../components/Notfound.vue";
+import Signin from "../pages/auth/signin.vue";
+import Signup from "../pages/auth/signup.vue";
+import AddTransaction from "../pages/transaction-page/add-transaction.vue";
+import ViewTransaction from "../pages/transaction-page/view-transaction.vue";
+import ViewData from "../pages/transaction-page/view-data.vue";
+import EditData from "../pages/transaction-page/edit-transaction.vue";
+import Notfound from "../pages/page-not-found/not-found.vue";
 
 function guardMyroute(to: any, from: any, next: any) {
   let isAuthenticated = false;
@@ -41,6 +41,7 @@ const router = createRouter({
   routes: [
     {
       path: "/",
+      name:'root',
       redirect: "/transactions",
     },
     {
@@ -48,8 +49,8 @@ const router = createRouter({
       component: ViewTransaction,
       beforeEnter: guardMyroute,
     },
-    { path: "/login", component: Signin, beforeEnter: guardMySign },
-    { path: "/register", component: Signup, beforeEnter: guardMySign },
+    { name:'login',path: "/login", component: Signin, beforeEnter: guardMySign },
+    {name:'register', path: "/register", component: Signup, beforeEnter: guardMySign },
     {
       path: "/transactions/create",
       component: AddTransaction,

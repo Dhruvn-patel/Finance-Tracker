@@ -37,7 +37,7 @@
         <v-spacer></v-spacer>
         <v-btn block class="mb-8" size="large" type="submit"> Register </v-btn>
         <router-link
-          to="/login"
+          :to="{ name: 'login' }"
           class="v-btn v-btn--block v-btn--elevated v-theme--light v-btn--density-default v-btn--size-large v-btn--variant-elevated mb-8"
         >
           Already Login ?

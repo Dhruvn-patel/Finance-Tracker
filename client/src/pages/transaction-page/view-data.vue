@@ -67,7 +67,7 @@ import { useRoute, useRouter } from "vue-router";
 import {
   singleData,
   TranasactionDataDelete,
-} from "../service/transaction.service";
+} from "../../service/transaction.service";
 export default {
   name: "TheView",
   setup() {
